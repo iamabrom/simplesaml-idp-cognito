@@ -1,0 +1,14 @@
+services:
+  idp:
+    build: .
+    ports:
+      - "8080:8080"
+    # All env vars are optional — set them to override defaults.
+    # Uncomment and edit as needed:
+    #
+    # environment:
+    #   ADMIN_PASSWORD: changeme
+    #   SECRET_SALT: change-this-to-a-long-random-string
+    #   SP_ENTITY_ID: "urn:amazon:cognito:sp:<pool-id>"
+    #   SP_ACS_URL: "https://<domain>/saml2/idpresponse"
+    #   SIMPLESAML_USERS: '[{"u":"user1","p":"secret","email":"user1@example.com","groups":"users"}]'

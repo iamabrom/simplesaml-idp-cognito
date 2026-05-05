@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * SP remote metadata template — rendered by docker/entrypoint.sh at container start.
+ *
+ * Placeholders substituted from environment variables:
+ *   __SP_ENTITY_ID__  →  SP_ENTITY_ID  (e.g. urn:amazon:cognito:sp:us-east-1_XXXXXX)
+ *   __SP_ACS_URL__    →  SP_ACS_URL    (e.g. https://<domain>.auth.us-east-1.amazoncognito.com/saml2/idpresponse)
+ *
+ * If either env var is unset the entrypoint writes an empty $metadata = [] instead.
+ */
+
+$metadata['__SP_ENTITY_ID__'] = [
+
+    'AssertionConsumerService' => '__SP_ACS_URL__',
+
+    'NameIDFormat' => 'urn:oasis:names:tc:SAML:2.0:nameid-format:emailAddress',
+
+    // Attributes released to the SP
+    'attributes' => ['email', 'givenName', 'sn', 'groups', 'uid'],
+    'attributes.required' => ['email'],
+];

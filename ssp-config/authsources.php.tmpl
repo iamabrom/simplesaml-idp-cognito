@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * Auth sources template — rendered by docker/entrypoint.sh at container start.
+ *
+ * The __USERS_BLOCK__ placeholder is replaced with PHP user-entry lines:
+ *
+ *     'alice:password' => [
+ *         'uid'       => ['alice'],
+ *         'email'     => ['alice@example.com'],
+ *         'givenName' => ['Alice'],
+ *         'sn'        => ['User'],
+ *         'groups'    => ['users'],
+ *     ],
+ *
+ * Source:
+ *   - SIMPLESAML_USERS env var (JSON array of {u, p, email, groups} objects), or
+ *   - auto-generated alice/bob with a random password printed to stdout.
+ */
+
+$config = [
+
+    'admin' => [
+        'core:AdminPassword',
+    ],
+
+    'simplesaml-users' => [
+        'exampleauth:UserPass',
+__USERS_BLOCK__
+    ],
+
+];

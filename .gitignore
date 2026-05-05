@@ -1,0 +1,16 @@
+# Environment files
+.env
+.env.*
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.claude/
+.spec/
+
+# Logs
+*.log
