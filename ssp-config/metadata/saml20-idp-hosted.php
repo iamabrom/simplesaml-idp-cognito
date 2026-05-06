@@ -4,7 +4,7 @@
  * SAML 2.0 hosted IdP metadata.
  *
  * '__DEFAULT__' as the key makes this entry the default for any hostname,
- * which is required because the App Runner URL is dynamic.
+ * which is required because the ECS Express Mode URL is dynamic.
  *
  * Cert files (saml.key / saml.crt) are generated at container start by
  * docker/entrypoint.sh and placed in the certdir configured in config.php.

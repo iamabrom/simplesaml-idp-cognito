@@ -33,9 +33,10 @@ $config = [
     // -------------------------------------------------------------------------
     'trusted.url.regex' => true,
 
-    // Trust X-Forwarded-Proto from the load balancer (ALB/ECS Express Mode
-    // terminate TLS and forward plain HTTP; without this SSP refuses to set
-    // secure cookies)
+    // Belt-and-suspenders: some SSP versions also check this flag when deciding
+    // whether the request arrived over HTTPS. The primary fix for the ALB/ECS
+    // TLS-termination case is SetEnvIf in the Apache vhost, which sets HTTPS=on
+    // in the PHP environment.
     'https.trustproxy' => true,
 
     // -------------------------------------------------------------------------

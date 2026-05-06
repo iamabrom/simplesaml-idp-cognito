@@ -2,7 +2,7 @@
 
 A lightweight **SAML 2.0 Identity Provider** container built on
 [SimpleSAMLphp 2.5](https://simplesamlphp.org/), designed to run on
-**AWS App Runner** for short-lived Cognito federation experimenting.
+**AWS ECS Express Mode** for short-lived Cognito federation experimenting.
 
 > **Not for production.** This IdP uses a self-signed cert, no database, and file-based PHP sessions. It is intentionally ephemeral — everything resets when the container restarts. Use it to learn how Cognito SAML federation works, then swap in a real IdP.
 
@@ -39,8 +39,10 @@ cd simplesaml-idp-cognito
 docker compose up --build
 ```
 
-Open <http://localhost:8080/> — the landing page links to the SSP admin panel
-and the IdP metadata URL.
+Open <http://localhost:8081/> — the nginx proxy simulates the ALB and adds
+`X-Forwarded-Proto: https`, which is required for SSP to function correctly.
+(`http://localhost:8080/` reaches the container directly and is useful only
+for the `/healthz` check — SSP will error there due to the missing header.)
 
 **Default credentials** (alice and bob) are printed to the container logs on
 first start:
@@ -83,7 +85,7 @@ All fields except `u` and `p` are optional (`email` defaults to `<u>@example.com
 
 ---
 
-## Deploying to AWS App Runner
+## Deploying to AWS ECS Express Mode
 
 ### 1. Get the image
 
@@ -95,14 +97,13 @@ ghcr.io/iamabrom/simplesaml-idp-cognito:latest
 
 If you'd prefer to host the image yourself, fork this repo — the included
 GitHub Actions workflow (`.github/workflows/publish.yml`) will publish to your
-own GHCR namespace automatically. You can also push to ECR and configure App
-Runner to pull from there instead.
+own GHCR namespace automatically. You can also push to ECR and configure ECS to pull from there instead.
 
-### 2. Create the App Runner service
+### 2. AWS ECS Express Mode
 
-1. In the AWS console, go to **App Runner → Create service**.
-2. **Source**: Container registry → select your image URI.
-3. **Port**: `8080`.
+1. In the AWS console, go to **ECS → Express Mode**.
+2. **Image URI**: `ghcr.io/iamabrom/simplesaml-idp-cognito:latest`
+3. **Container Port**: `8080`.
 4. **Health check path**: `/healthz`.
 5. Set environment variables:
    - **`ADMIN_PASSWORD`** — set this to a value you choose, or leave blank and retrieve it from the CloudWatch logs after deploy (username is always `admin`).
@@ -110,30 +111,30 @@ Runner to pull from there instead.
      - `SP_ENTITY_ID` = `urn:amazon:cognito:sp:<your-user-pool-id>`
      - `SP_ACS_URL` = `https://<your-cognito-domain>/saml2/idpresponse`
    - **If you don't have a pool yet**, leave both blank — you can update the service after creating the Cognito user pool.
-6. Deploy.
+6. Create.
 
-App Runner gives you a URL like `https://xxxxxxxxxxxx.us-east-1.awsapprunner.com`.
+ECS gives you a URL like `https://xxxxxxxxxxxx.ecs.us-west-1.on.aws`.
 
 ---
 
 ## Usage flow: wiring up Cognito SAML federation
 
-Follow the below steps after your App Runner service is running. These are general steps, refer to the official [Cognito developer guide](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-managing-saml-idp.html) for the latest information.
+Follow the below steps after your ECS service is running. These are general steps, refer to the official [Cognito developer guide](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-managing-saml-idp.html) for the latest information.
 
 ### Step 1 — Grab the IdP metadata URL
 
 ```
-https://<apprunner-url>/simplesaml/saml2/idp/metadata.php
+https://<ecs-url>/simplesaml/saml2/idp/metadata.php
 ```
 
 Copy this URL; you'll paste it into Cognito.
 
 ### Step 2 — Check the generated user credentials
 
-Open the App Runner service in the console → **Logs** (CloudWatch).  
+In the AWS console go to **ECS → Clusters → your cluster → Services → your service → Tasks → the running task → Logs tab**.  
 Look for the banners printed at startup — one for the admin panel credentials
 (if `ADMIN_PASSWORD` was not set) and one for the default user credentials
-(if `SIMPLESAML_USERS` was not set).
+(if `SIMPLESAML_USERS` was not set). These should be found under "SimpleSAML IdP - Default Users Created"
 
 ### Step 3 — Create a Cognito SAML IdP
 
@@ -146,14 +147,14 @@ Look for the banners printed at startup — one for the admin panel credentials
 
 ### Step 4 — Feed the SP values back to the IdP
 
-Update the App Runner service environment variables:
+Update the ECS Express Mode service environment variables:
 
 | Variable | Value |
 |---|---|
 | `SP_ENTITY_ID` | `urn:amazon:cognito:sp:<pool-id>` |
 | `SP_ACS_URL` | `https://<cognito-domain>/saml2/idpresponse` |
 
-App Runner redeploys in ~30 seconds with no downtime.
+ECS Express Mode will redeploy automatically — allow a few minutes for the new task to become healthy.
 
 ### Step 5 — Configure Cognito attribute mapping
 
