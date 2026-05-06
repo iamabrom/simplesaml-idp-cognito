@@ -29,9 +29,14 @@ $config = [
     'auth.adminpassword' => (string) getenv('ADMIN_PASSWORD'),
 
     // -------------------------------------------------------------------------
-    // URL trust — allow any host (needed for dynamic App Runner URLs)
+    // URL trust — allow any host (needed for dynamic URLs)
     // -------------------------------------------------------------------------
     'trusted.url.regex' => true,
+
+    // Trust X-Forwarded-Proto from the load balancer (ALB/ECS Express Mode
+    // terminate TLS and forward plain HTTP; without this SSP refuses to set
+    // secure cookies)
+    'https.trustproxy' => true,
 
     // -------------------------------------------------------------------------
     // Enable SAML 2.0 IdP
